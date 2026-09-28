@@ -1,0 +1,33 @@
+workflows:
+  ios-build:
+    name: Sensi Javier iOS Build
+    environment:
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Build archive
+        script: |
+          set -e
+          xcodebuild \
+            -project "SensiJavier.xcodeproj" \
+            -scheme "SensiJavier" \
+            -sdk iphoneos \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            archive \
+            -archivePath "$CM_BUILD_DIR/SensiJavier.xcarchive"
+      - name: Create unsigned IPA
+        script: |
+          set -e
+          APP="$CM_BUILD_DIR/SensiJavier.xcarchive/Products/Applications/SensiJavier.app"
+          test -d "$APP"
+          rm -rf "$CM_BUILD_DIR/Payload"
+          mkdir -p "$CM_BUILD_DIR/Payload"
+          cp -R "$APP" "$CM_BUILD_DIR/Payload/"
+          cd "$CM_BUILD_DIR"
+          /usr/bin/zip -r "SensiJavier.ipa" Payload
+    artifacts:
+      - "SensiJavier.ipa"
+      - "SensiJavier.xcarchive"
